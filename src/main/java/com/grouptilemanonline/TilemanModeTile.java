@@ -38,4 +38,19 @@ class TilemanModeTile
 	private int regionY;
 	private int z;
 	private String playerName;
+
+	@Override public boolean equals(Object object) {
+		if (object == this) {
+			return true;
+		}
+		if (!(object instanceof TilemanModeTile)) {
+			return false;
+		}
+
+		TilemanModeTile tile = (TilemanModeTile) object;
+		return  tile.regionId == regionId &&
+				tile.regionY == regionY &&
+				tile.regionX == regionX &&
+				tile.z == z;
+	}
 }

@@ -37,6 +37,8 @@ import java.awt.datatransfer.StringSelection;
 import java.awt.datatransfer.UnsupportedFlavorException;
 import java.io.IOException;
 import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import javax.inject.Inject;
 
 import net.runelite.api.ChatMessageType;
@@ -58,6 +60,7 @@ public class DatabaseIntegrationManager {
     private static final WidgetMenuOption EXPORT_MARKERS_OPTION = new WidgetMenuOption("Export", "Tileman Markers", MINIMAP_WORLDMAP_OPTIONS);
     private static final WidgetMenuOption IMPORT_MARKERS_OPTION = new WidgetMenuOption("Import", "Group Tileman Markers", MINIMAP_WORLDMAP_OPTIONS);
 
+    private static final Gson GSON = new Gson();
     private final TilemanModePlugin plugin;
     private final Client client;
     private final MenuManager menuManager;
@@ -121,10 +124,19 @@ public class DatabaseIntegrationManager {
             return;
         }
         try {
-            GroupTiles tilesFromUser = gson.fromJson(clipboardText, GroupTiles.class);
+            GroupTiles remoteTiles = gson.fromJson(clipboardText, GroupTiles.class);
+            for (String region : remoteTiles.getRegionTiles().keySet() ) {
+                Collection<TilemanModeTile> localRegionTiles = Collections.emptyList();
+                String json = configManager.getConfiguration(TilemanModePlugin.CONFIG_GROUP, region);
+                if (!Strings.isNullOrEmpty(json)) {
+                    localRegionTiles = GSON.fromJson(json, new TypeToken<List<TilemanModeTile>>() {
+                    }.getType());
+                }
+                Collection<TilemanModeTile> remoteRegionTiles = remoteTiles.getRegionTiles().get(region);
+                Collection<TilemanModeTile> mergedRegionTiles = Stream.concat(localRegionTiles.stream(), remoteRegionTiles.stream())
+                        .collect(Collectors.toList());
 
-            for (String region : tilesFromUser.getRegionTiles().keySet() ) {
-                configManager.setConfiguration(TilemanModePlugin.CONFIG_GROUP, region, gson.toJson(tilesFromUser.getRegionTiles().get(region)));
+                configManager.setConfiguration(TilemanModePlugin.CONFIG_GROUP, region, gson.toJson(mergedRegionTiles));
             }
 
             plugin.loadPoints();
