@@ -159,7 +159,8 @@ public class TilemanModePlugin extends Plugin {
 
             final WorldPoint worldPoint = WorldPoint.fromLocalInstance(client, selectedSceneTile.getLocalLocation());
             final int regionId = worldPoint.getRegionID();
-            final TilemanModeTile point = new TilemanModeTile(regionId, worldPoint.getRegionX(), worldPoint.getRegionY(), client.getPlane());
+            final int playerId = client.getLocalPlayer().getId();
+            final TilemanModeTile point = new TilemanModeTile(regionId, worldPoint.getRegionX(), worldPoint.getRegionY(), client.getPlane(), playerId);
 
             client.createMenuEntry(-1)
                     .setOption(getTiles(regionId).contains(point) ? UNMARK : MARK)
@@ -632,7 +633,8 @@ public class TilemanModePlugin extends Plugin {
         WorldPoint worldPoint = WorldPoint.fromLocalInstance(client, localPoint);
 
         int regionId = worldPoint.getRegionID();
-        TilemanModeTile point = new TilemanModeTile(regionId, worldPoint.getRegionX(), worldPoint.getRegionY(), client.getPlane());
+        int playerId = client.getLocalPlayer().getId();
+        TilemanModeTile point = new TilemanModeTile(regionId, worldPoint.getRegionX(), worldPoint.getRegionY(), client.getPlane(), playerId);
         log.debug("Updating point: {} - {}", point, worldPoint);
 
         List<TilemanModeTile> tilemanModeTiles = new ArrayList<>(getTiles(regionId));

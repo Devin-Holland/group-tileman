@@ -37,4 +37,5 @@ class TilemanModeTile
 	private int regionX;
 	private int regionY;
 	private int z;
+	private int playerId;
 }
