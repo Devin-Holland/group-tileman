@@ -1,0 +1,77 @@
+{
+  "playerName": "TestPlayerTwo",
+  "regionTiles": {
+    "region_12850": [
+      {
+        "regionId": 12850,
+        "regionX": 36,
+        "regionY": 20,
+        "z": 0,
+        "playerName": "TestPlayerTwo"
+      },
+      {
+        "regionId": 12850,
+        "regionX": 37,
+        "regionY": 20,
+        "z": 0,
+        "playerName": "TestPlayerTwo"
+      },
+      {
+        "regionId": 12850,
+        "regionX": 38,
+        "regionY": 20,
+        "z": 0,
+        "playerName": "TestPlayerTwo"
+      },
+      {
+        "regionId": 12850,
+        "regionX": 39,
+        "regionY": 20,
+        "z": 0,
+        "playerName": "TestPlayerTwo"
+      },
+      {
+        "regionId": 12850,
+        "regionX": 36,
+        "regionY": 19,
+        "z": 0,
+        "playerName": "TestPlayerTwo"
+      },
+      {
+        "regionId": 12850,
+        "regionX": 36,
+        "regionY": 18,
+        "z": 0,
+        "playerName": "TestPlayerTwo"
+      },
+      {
+        "regionId": 12850,
+        "regionX": 36,
+        "regionY": 17,
+        "z": 0,
+        "playerName": "TestPlayerTwo"
+      },
+      {
+        "regionId": 12850,
+        "regionX": 37,
+        "regionY": 16,
+        "z": 0,
+        "playerName": "TestPlayerTwo"
+      },
+      {
+        "regionId": 12850,
+        "regionX": 38,
+        "regionY": 16,
+        "z": 0,
+        "playerName": "TestPlayerTwo"
+      },
+      {
+        "regionId": 12850,
+        "regionX": 35,
+        "regionY": 20,
+        "z": 0,
+        "playerName": "TestPlayerTwo"
+      }
+    ]
+  }
+}

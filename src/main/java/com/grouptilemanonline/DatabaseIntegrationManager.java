@@ -44,7 +44,6 @@ import javax.inject.Inject;
 import net.runelite.api.ChatMessageType;
 import net.runelite.api.Client;
 import net.runelite.api.MenuEntry;
-import com.grouptilemanonline.GroupTiles;
 
 import static net.runelite.api.widgets.WidgetInfo.MINIMAP_WORLDMAP_OPTIONS;
 
@@ -55,12 +54,9 @@ import net.runelite.client.game.chatbox.ChatboxPanelManager;
 import net.runelite.client.menus.MenuManager;
 import net.runelite.client.menus.WidgetMenuOption;
 
-import net.runelite.client.menus.WidgetMenuOption;
 public class DatabaseIntegrationManager {
     private static final WidgetMenuOption EXPORT_MARKERS_OPTION = new WidgetMenuOption("Export", "Tileman Markers", MINIMAP_WORLDMAP_OPTIONS);
     private static final WidgetMenuOption IMPORT_MARKERS_OPTION = new WidgetMenuOption("Import", "Group Tileman Markers", MINIMAP_WORLDMAP_OPTIONS);
-
-    private static final Gson GSON = new Gson();
     private final TilemanModePlugin plugin;
     private final Client client;
     private final MenuManager menuManager;
@@ -90,17 +86,21 @@ public class DatabaseIntegrationManager {
     private void exportTilesFromPlayer(MenuEntry menuEntry) {
         List<String> keys = configManager.getConfigurationKeys(TilemanModePlugin.CONFIG_GROUP);
 
-        TreeMap<String, List<TilemanModeTile>> regionTiles = new TreeMap<>();
+        TreeMap<String, List<TilemanModeTile>> tilesToExport = new TreeMap<>();
 
         for (String key : keys) {
             if (key.startsWith(TilemanModePlugin.CONFIG_GROUP + "." + TilemanModePlugin.REGION_PREFIX)) {
                 key = key.replace(TilemanModePlugin.CONFIG_GROUP + ".","");
-                regionTiles.put(key, gson.fromJson(configManager.getConfiguration(TilemanModePlugin.CONFIG_GROUP, key), new TypeToken<List<TilemanModeTile>>() {
-                }.getType()));
+                List<TilemanModeTile> regionTiles = gson.fromJson(configManager.getConfiguration(TilemanModePlugin.CONFIG_GROUP, key), new TypeToken<List<TilemanModeTile>>() {
+                }.getType());
+                regionTiles.removeIf(tile -> tile.getPlayerName().equals(plugin.getPlayerName()));
+                if(regionTiles.size() > 0 ) {
+                  tilesToExport.put(key, regionTiles);
+                }
             }
         }
 
-        final String exportDump = gson.toJson(new GroupTiles(plugin.getPlayerName(), regionTiles));
+        final String exportDump = gson.toJson(new GroupTiles(plugin.getPlayerName(), tilesToExport));
 
         Toolkit.getDefaultToolkit()
                 .getSystemClipboard()
@@ -129,7 +129,7 @@ public class DatabaseIntegrationManager {
                 Collection<TilemanModeTile> localRegionTiles = Collections.emptyList();
                 String json = configManager.getConfiguration(TilemanModePlugin.CONFIG_GROUP, region);
                 if (!Strings.isNullOrEmpty(json)) {
-                    localRegionTiles = GSON.fromJson(json, new TypeToken<List<TilemanModeTile>>() {
+                    localRegionTiles = gson.fromJson(json, new TypeToken<List<TilemanModeTile>>() {
                     }.getType());
                 }
                 Collection<TilemanModeTile> remoteRegionTiles = remoteTiles.getRegionTiles().get(region);

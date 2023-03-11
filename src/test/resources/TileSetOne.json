@@ -1,0 +1,21 @@
+{
+  "playerName": "TestPlayerOne",
+  "regionTiles": {
+    "region_12850": [
+      {
+        "regionId": 12850,
+        "regionX": 35,
+        "regionY": 21,
+        "z": 0,
+        "playerId": "TestPlayerOne"
+      },
+      {
+        "regionId": 12850,
+        "regionX": 35,
+        "regionY": 22,
+        "z": 0,
+        "playerId": "TestPlayerOne"
+      }
+    ]
+  }
+}
