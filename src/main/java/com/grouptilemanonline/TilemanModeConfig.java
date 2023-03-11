@@ -153,6 +153,15 @@ public interface TilemanModeConfig extends Config {
         return Color.YELLOW;
     }
 
+    @ConfigItem(
+            keyName = "disableBanking",
+            name = "Disable Banking",
+            section = settingsSection,
+            description = "Disables banking options on npc/bank booth/bank chest",
+            position = 7
+    )
+    default boolean disableBanking() { return false; }
+
     /***   Custom Game Mode section   ***/
     @ConfigItem(
             keyName = "enableCustomGameMode",

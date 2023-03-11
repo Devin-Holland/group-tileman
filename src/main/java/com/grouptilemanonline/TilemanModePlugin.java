@@ -38,6 +38,8 @@ import net.runelite.api.*;
 import net.runelite.api.coords.LocalPoint;
 import net.runelite.api.coords.WorldPoint;
 import net.runelite.api.events.*;
+import net.runelite.api.widgets.Widget;
+import net.runelite.api.widgets.WidgetInfo;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.events.ConfigChanged;
@@ -99,6 +101,7 @@ public class TilemanModePlugin extends Plugin {
 
     @Inject
     private DatabaseIntegrationManager databaseIntegrationManager;
+
 
     @Provides
     TilemanModeConfig provideConfig(ConfigManager configManager) {
@@ -322,6 +325,28 @@ public class TilemanModePlugin extends Plugin {
 
     List<String> getAllRegionIds(String configGroup) {
         return removeRegionPrefixes(configManager.getConfigurationKeys(configGroup + ".region"));
+    }
+
+    // Disable Banking
+    @Subscribe
+    public void onPostMenuSort(PostMenuSort postMenuSort)
+    {
+        if (config.disableBanking()) {
+            MenuEntry[] oldEntries = client.getMenuEntries();
+            MenuEntry[] newEntries = Arrays.stream(oldEntries)
+                    .filter(e ->
+                    {
+                        final String option = e.getOption().toLowerCase();
+                        final String target = e.getTarget().toLowerCase();
+                        return !option.contains("bank")
+                                && !option.contains("deposit")
+                                && !(target.contains("bank") && (option.contains("talk-to") || option.contains("use")));
+                    }).toArray(MenuEntry[]::new);
+
+            if (oldEntries.length != newEntries.length) {
+                client.setMenuEntries(newEntries);
+            }
+        }
     }
 
     private List<String> removeRegionPrefixes(List<String> regions) {

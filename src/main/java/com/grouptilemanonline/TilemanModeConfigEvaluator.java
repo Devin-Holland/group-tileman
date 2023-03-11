@@ -122,4 +122,7 @@ class TilemanModeConfigEvaluator implements TilemanModeConfig {
     public boolean allowTileDeficit() {
         return config.allowTileDeficit();
     }
+
+    @Override
+    public boolean disableBanking() { return config.disableBanking(); }
 }
