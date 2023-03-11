@@ -24,7 +24,7 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package com.tileman;
+package com.grouptilemanonline;
 
 import com.google.common.base.Strings;
 import com.google.gson.Gson;
@@ -54,16 +54,16 @@ import java.util.stream.Collectors;
 
 @Slf4j
 @PluginDescriptor(
-        name = "Tileman Mode",
-        description = "Automatically draws tiles where you walk",
+        name = "Group Tileman Mode Online",
+        description = "Automatically draws tiles where you or your group walk",
         tags = {"overlay", "tiles"}
 )
 public class TilemanModePlugin extends Plugin {
-    private static final String CONFIG_GROUP = "tilemanMode";
+    public static final String CONFIG_GROUP = "groupTilemanModeOnline";
     private static final String MARK = "Unlock Tileman tile";
     private static final String UNMARK = "Clear Tileman tile";
     private static final String WALK_HERE = "Walk here";
-    private static final String REGION_PREFIX = "region_";
+    public static final String REGION_PREFIX = "region_";
 
     private static final Gson GSON = new Gson();
 
@@ -96,6 +96,9 @@ public class TilemanModePlugin extends Plugin {
 
     @Inject
     private ClientToolbar clientToolbar;
+
+    @Inject
+    private DatabaseIntegrationManager databaseIntegrationManager;
 
     @Provides
     TilemanModeConfig provideConfig(ConfigManager configManager) {
@@ -227,6 +230,7 @@ public class TilemanModePlugin extends Plugin {
                 .build();
 
         clientToolbar.addNavigation(navButton);
+        databaseIntegrationManager.addImportExportMenuOptions();
     }
 
     @Override
@@ -391,7 +395,7 @@ public class TilemanModePlugin extends Plugin {
         }.getType());
     }
 
-    private void loadPoints() {
+    public void loadPoints() {
         points.clear();
 
         int[] regions = client.getMapRegions();
@@ -645,6 +649,10 @@ public class TilemanModePlugin extends Plugin {
 
         savePoints(regionId, tilemanModeTiles);
         loadPoints();
+    }
+
+    public String getPlayerName() {
+        return client.getLocalPlayer() != null && client.getLocalPlayer().getName() != null ? client.getLocalPlayer().getName() : "";
     }
 
     int getXpUntilNextTile() {

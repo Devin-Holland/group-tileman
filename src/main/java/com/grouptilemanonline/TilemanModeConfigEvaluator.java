@@ -24,7 +24,7 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package com.tileman;
+package com.grouptilemanonline;
 
 import lombok.extern.slf4j.Slf4j;
 

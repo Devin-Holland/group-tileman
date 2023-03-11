@@ -25,7 +25,7 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package com.tileman;
+package com.grouptilemanonline;
 
 import java.awt.*;
 import javax.inject.Inject;

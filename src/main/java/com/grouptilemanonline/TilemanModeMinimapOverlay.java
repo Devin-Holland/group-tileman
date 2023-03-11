@@ -1,6 +1,5 @@
 /*
- * Copyright (c) 2018, TheLonelyDev <https://github.com/TheLonelyDev>
- * Copyright (c) 2018, Adam <Adam@sigterm.info>
+ * Copyright (c) 2019, Benjamin <https://github.com/genetic-soybean>
  * Copyright (c) 2020, ConorLeckey <https://github.com/ConorLeckey>
  * All rights reserved.
  *
@@ -24,10 +23,11 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package com.tileman;
+package com.grouptilemanonline;
 
 import net.runelite.api.Client;
 import net.runelite.api.Perspective;
+import net.runelite.api.Point;
 import net.runelite.api.coords.LocalPoint;
 import net.runelite.api.coords.WorldPoint;
 import net.runelite.client.ui.overlay.*;
@@ -36,45 +36,51 @@ import javax.inject.Inject;
 import java.awt.*;
 import java.util.Collection;
 
-public class TilemanModeOverlay extends Overlay
+class TilemanModeMinimapOverlay extends Overlay
 {
-	private static final int MAX_DRAW_DISTANCE = 32;
+	private static final int MAX_DRAW_DISTANCE = 16;
+	private static final int TILE_WIDTH = 4;
+	private static final int TILE_HEIGHT = 4;
 
 	private final Client client;
+	private final TilemanModeConfig config;
 	private final TilemanModePlugin plugin;
 
 	@Inject
-	private TilemanModeConfig config;
-
-	@Inject
-	private TilemanModeOverlay(Client client, TilemanModeConfig config, TilemanModePlugin plugin)
+	private TilemanModeMinimapOverlay(Client client, TilemanModeConfig config, TilemanModePlugin plugin)
 	{
 		this.client = client;
-		this.plugin = plugin;
 		this.config = config;
+		this.plugin = plugin;
 		setPosition(OverlayPosition.DYNAMIC);
 		setPriority(OverlayPriority.LOW);
-		setLayer(OverlayLayer.ABOVE_SCENE);
+		setLayer(OverlayLayer.ABOVE_WIDGETS);
 	}
 
 	@Override
 	public Dimension render(Graphics2D graphics)
 	{
+		if (!config.drawTilesOnMinimap())
+		{
+			return null;
+		}
+
 		final Collection<WorldPoint> points = plugin.getPoints();
 		for (final WorldPoint point : points)
 		{
-			if (point.getPlane() != client.getPlane())
+			WorldPoint worldPoint = point;
+			if (worldPoint.getPlane() != client.getPlane())
 			{
 				continue;
 			}
 
-			drawTile(graphics, point);
+			drawOnMinimap(graphics, worldPoint);
 		}
 
 		return null;
 	}
 
-	private void drawTile(Graphics2D graphics, WorldPoint point)
+	private void drawOnMinimap(Graphics2D graphics, WorldPoint point)
 	{
 		WorldPoint playerLocation = client.getLocalPlayer().getWorldLocation();
 
@@ -89,13 +95,13 @@ public class TilemanModeOverlay extends Overlay
 			return;
 		}
 
-		Polygon poly = Perspective.getCanvasTilePoly(client, lp);
-		if (poly == null)
+		Point posOnMinimap = Perspective.localToMinimap(client, lp);
+		if (posOnMinimap == null)
 		{
 			return;
 		}
 
-		OverlayUtil.renderPolygon(graphics, poly, getTileColor());
+		OverlayUtil.renderMinimapRect(client, graphics, posOnMinimap, TILE_WIDTH, TILE_HEIGHT, getTileColor());
 	}
 
 	private Color getTileColor() {
