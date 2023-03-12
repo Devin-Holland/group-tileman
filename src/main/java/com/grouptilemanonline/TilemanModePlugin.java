@@ -128,7 +128,7 @@ public class TilemanModePlugin extends Plugin {
 
     private final HashSet<Integer> tutorialIslandRegionIds = new HashSet<Integer>();
 
-    private int totalTilesUsed, remainingTiles, xpUntilNextTile;
+    private int totalTilesUsed, remainingTiles, xpUntilNextTile, personalTilesUsed;
     private LocalPoint lastTile;
     private int lastPlane;
     private boolean lastAutoTilesConfig = false;
@@ -377,15 +377,18 @@ public class TilemanModePlugin extends Plugin {
     private void updateTileCounter() {
         List<String> regions = configManager.getConfigurationKeys(CONFIG_GROUP + ".region");
         int totalTiles = 0;
+        int personalTiles = 0;
         for (String region : regions) {
             Collection<TilemanModeTile> regionTiles = getTiles(removeRegionPrefix(region));
-            regionTiles.removeIf(tile -> !tile.getPlayerName().equals(getPlayerName()));
             totalTiles += regionTiles.size();
+            regionTiles.removeIf(tile -> !tile.getPlayerName().equals(getPlayerName()));
+            personalTiles += regionTiles.size();
         }
 
         log.debug("Updating tile counter");
 
         updateTotalTilesUsed(totalTiles);
+        updatePersonalTilesUsed(personalTiles);
         updateRemainingTiles(totalTiles);
         updateXpUntilNextTile();
     }
@@ -393,6 +396,8 @@ public class TilemanModePlugin extends Plugin {
     private void updateTotalTilesUsed(int totalTilesCount) {
         totalTilesUsed = totalTilesCount;
     }
+
+    private void updatePersonalTilesUsed(int personalTilesCount) { personalTilesUsed = personalTilesCount; }
 
     private void updateRemainingTiles(int placedTiles) {
         // Start with tiles offset. We always get these
@@ -474,6 +479,8 @@ public class TilemanModePlugin extends Plugin {
     int getTotalTiles() {
         return totalTilesUsed;
     }
+
+    int getPersonalTiles() { return personalTilesUsed; }
 
     int getRemainingTiles() {
         return remainingTiles;

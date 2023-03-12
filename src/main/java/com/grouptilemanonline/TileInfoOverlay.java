@@ -45,11 +45,13 @@ class TileInfoOverlay extends OverlayPanel {
 
     private final static String UNSPENT_TILES_STRING = "Available Tiles:";
     private final static String XP_UNTIL_NEXT_TILE = "XP Until Next Tile:";
-    private final static String UNLOCKED_TILES = "Tiles Unlocked:";
+    private final static String PERSONAL_UNLOCKED_TILES = "Your Tiles Unlocked:";
+    private final static String GROUP_UNLOCKED_TILES = "Total Tiles Unlocked:";
     private final static String[] STRINGS = new String[] {
         UNSPENT_TILES_STRING,
         XP_UNTIL_NEXT_TILE,
-        UNLOCKED_TILES,
+        PERSONAL_UNLOCKED_TILES,
+        GROUP_UNLOCKED_TILES
     };
 
     @Inject
@@ -66,7 +68,8 @@ class TileInfoOverlay extends OverlayPanel {
     @Override
     public Dimension render(Graphics2D graphics) {
         String unspentTiles = addCommasToNumber(plugin.getRemainingTiles());
-        String unlockedTiles = addCommasToNumber(plugin.getTotalTiles());
+        String unlockedTiles = addCommasToNumber(plugin.getPersonalTiles());
+        String groupUnlockedTiles = addCommasToNumber(plugin.getTotalTiles());
         String xpUntilNextTile = addCommasToNumber(plugin.getXpUntilNextTile());
 
         panelComponent.getChildren().add(LineComponent.builder()
@@ -84,13 +87,18 @@ class TileInfoOverlay extends OverlayPanel {
         }
 
         panelComponent.getChildren().add(LineComponent.builder()
-                .left(UNLOCKED_TILES)
+                .left(PERSONAL_UNLOCKED_TILES)
                 .right(unlockedTiles)
+                .build());
+
+        panelComponent.getChildren().add(LineComponent.builder()
+                .left(GROUP_UNLOCKED_TILES)
+                .right(groupUnlockedTiles)
                 .build());
 
         panelComponent.setPreferredSize(new Dimension(
                 getLongestStringWidth(STRINGS, graphics)
-                        + getLongestStringWidth(new String[] {unlockedTiles, unspentTiles}, graphics),
+                        + getLongestStringWidth(new String[] {unlockedTiles, unspentTiles, groupUnlockedTiles}, graphics),
                 0));
 
         return super.render(graphics);
