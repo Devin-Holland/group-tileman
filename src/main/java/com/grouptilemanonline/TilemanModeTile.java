@@ -53,4 +53,9 @@ class TilemanModeTile
 				tile.regionX == regionX &&
 				tile.z == z;
 	}
+
+	@Override
+	public int hashCode() {
+		return regionId + regionY + regionX + z;
+	}
 }
