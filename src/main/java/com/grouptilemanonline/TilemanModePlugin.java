@@ -191,6 +191,11 @@ public class TilemanModePlugin extends Plugin {
 
     @Subscribe
     public void onConfigChanged(ConfigChanged event) {
+        final Player player = client.getLocalPlayer();
+        // This event fired before login
+        if (player == null) {
+            return;
+        }
         // Check if automark tiles is on, and if so attempt to step on current tile
         final WorldPoint playerPos = client.getLocalPlayer().getWorldLocation();
         final LocalPoint playerPosLocal = LocalPoint.fromWorld(client, playerPos);
@@ -374,7 +379,7 @@ public class TilemanModePlugin extends Plugin {
         int totalTiles = 0;
         for (String region : regions) {
             Collection<TilemanModeTile> regionTiles = getTiles(removeRegionPrefix(region));
-            regionTiles.removeIf(tile -> tile.getPlayerName() != getPlayerName());
+            regionTiles.removeIf(tile -> !tile.getPlayerName().equals(getPlayerName()));
             totalTiles += regionTiles.size();
         }
 

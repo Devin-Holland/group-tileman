@@ -94,7 +94,7 @@ public class DatabaseIntegrationManager {
                 key = key.replace(TilemanModePlugin.CONFIG_GROUP + ".","");
                 List<TilemanModeTile> regionTiles = gson.fromJson(configManager.getConfiguration(TilemanModePlugin.CONFIG_GROUP, key), new TypeToken<List<TilemanModeTile>>() {
                 }.getType());
-                regionTiles.removeIf(tile -> tile.getPlayerName().equals(plugin.getPlayerName()));
+                regionTiles.removeIf(tile -> !tile.getPlayerName().equals(plugin.getPlayerName()));
                 if(regionTiles.size() > 0 ) {
                   tilesToExport.put(key, regionTiles);
                 }
