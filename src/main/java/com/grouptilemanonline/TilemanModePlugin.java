@@ -70,7 +70,7 @@ public class TilemanModePlugin extends Plugin {
     private static final Gson GSON = new Gson();
 
     @Getter(AccessLevel.PACKAGE)
-    private final List<WorldPoint> points = new ArrayList<>();
+    private final List<TilemanModeTile> points = new ArrayList<>();
 
     @Inject
     private Client client;
@@ -433,8 +433,8 @@ public class TilemanModePlugin extends Plugin {
         for (int regionId : regions) {
             // load points for region
             log.debug("Loading points for region {}", regionId);
-            Collection<WorldPoint> worldPoint = translateToWorldPoint(getTiles(regionId));
-            points.addAll(worldPoint);
+            //Collection<WorldPoint> worldPoint = translateToWorldPoint(getTiles(regionId));
+            points.addAll(getTiles(regionId));
         }
         updateTileCounter();
     }
@@ -449,6 +449,7 @@ public class TilemanModePlugin extends Plugin {
         configManager.setConfiguration(CONFIG_GROUP, REGION_PREFIX + regionId, json);
     }
 
+    /*
     private Collection<WorldPoint> translateToWorldPoint(Collection<TilemanModeTile> points) {
         if (points.isEmpty()) {
             return Collections.emptyList();
@@ -463,6 +464,7 @@ public class TilemanModePlugin extends Plugin {
                 })
                 .collect(Collectors.toList());
     }
+    */
 
     int getTotalTiles() {
         return totalTilesUsed;

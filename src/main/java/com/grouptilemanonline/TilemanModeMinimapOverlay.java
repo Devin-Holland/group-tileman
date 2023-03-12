@@ -25,16 +25,22 @@
  */
 package com.grouptilemanonline;
 
+import com.google.common.base.Strings;
+import com.google.gson.Gson;
+
+import com.google.gson.reflect.TypeToken;
 import net.runelite.api.Client;
 import net.runelite.api.Perspective;
 import net.runelite.api.Point;
 import net.runelite.api.coords.LocalPoint;
 import net.runelite.api.coords.WorldPoint;
+import net.runelite.client.config.ConfigManager;
 import net.runelite.client.ui.overlay.*;
 
 import javax.inject.Inject;
 import java.awt.*;
 import java.util.Collection;
+import java.util.List;
 
 class TilemanModeMinimapOverlay extends Overlay
 {
@@ -46,12 +52,18 @@ class TilemanModeMinimapOverlay extends Overlay
 	private final TilemanModeConfig config;
 	private final TilemanModePlugin plugin;
 
+	private final Gson gson;
+
 	@Inject
-	private TilemanModeMinimapOverlay(Client client, TilemanModeConfig config, TilemanModePlugin plugin)
+	private ConfigManager configManager;
+
+	@Inject
+	private TilemanModeMinimapOverlay(Client client, TilemanModeConfig config, TilemanModePlugin plugin, Gson gson)
 	{
 		this.client = client;
 		this.config = config;
 		this.plugin = plugin;
+		this.gson = gson;
 		setPosition(OverlayPosition.DYNAMIC);
 		setPriority(OverlayPriority.LOW);
 		setLayer(OverlayLayer.ABOVE_WIDGETS);
@@ -65,22 +77,24 @@ class TilemanModeMinimapOverlay extends Overlay
 			return null;
 		}
 
-		final Collection<WorldPoint> points = plugin.getPoints();
-		for (final WorldPoint point : points)
+		final Collection<TilemanModeTile> points = plugin.getPoints();
+		for (final TilemanModeTile tilemanPoint : points)
 		{
-			WorldPoint worldPoint = point;
+			final WorldPoint worldPoint = translateToWorldPoint(tilemanPoint);
+			if (worldPoint == null) { continue; }
+
 			if (worldPoint.getPlane() != client.getPlane())
 			{
 				continue;
 			}
 
-			drawOnMinimap(graphics, worldPoint);
+			drawOnMinimap(graphics, worldPoint, tilemanPoint.getPlayerName());
 		}
 
 		return null;
 	}
 
-	private void drawOnMinimap(Graphics2D graphics, WorldPoint point)
+	private void drawOnMinimap(Graphics2D graphics, WorldPoint point, String playerName)
 	{
 		WorldPoint playerLocation = client.getLocalPlayer().getWorldLocation();
 
@@ -101,17 +115,49 @@ class TilemanModeMinimapOverlay extends Overlay
 			return;
 		}
 
-		OverlayUtil.renderMinimapRect(client, graphics, posOnMinimap, TILE_WIDTH, TILE_HEIGHT, getTileColor());
+		OverlayUtil.renderMinimapRect(client, graphics, posOnMinimap, TILE_WIDTH, TILE_HEIGHT, getTileColor(playerName));
 	}
 
-	private Color getTileColor() {
-		if(config.enableTileWarnings()) {
-			if (plugin.getRemainingTiles() <= 0) {
-				return Color.RED;
-			} else if (plugin.getRemainingTiles() <= config.warningLimit()) {
-				return new Color(255, 153, 0);
+	private Color getTileColor(String playerName) {
+		if (playerName == plugin.getPlayerName()) {
+			if (config.enableTileWarnings()) {
+				if (plugin.getRemainingTiles() <= 0) {
+					return Color.RED;
+				} else if (plugin.getRemainingTiles() <= config.warningLimit()) {
+					return new Color(255, 153, 0);
+				}
 			}
 		}
+
+		String groupMembersJson = configManager.getConfiguration(TilemanModePlugin.CONFIG_GROUP, "groupmembers");
+		if (!Strings.isNullOrEmpty(groupMembersJson)) {
+			java.util.List<GroupMember> groupMembers = gson.fromJson(groupMembersJson, new TypeToken<List<GroupMember>>() {}.getType());
+			groupMembers.removeIf(member -> !member.getPlayerName().equals(playerName));
+			if (groupMembers.size() == 1) {
+				int memberNumber = groupMembers.get(0).getMemberNumber();
+				switch (memberNumber) {
+					case 1:
+						return config.groupMarkerColor1();
+					case 2:
+						return config.groupMarkerColor2();
+					case 3:
+						return config.groupMarkerColor3();
+					case 4:
+						return config.groupMarkerColor4();
+					default:
+						break;
+				}
+			}
+		}
+
 		return config.markerColor();
+	}
+
+	private WorldPoint translateToWorldPoint(TilemanModeTile point) {
+		if (point == null) {
+			return null;
+		}
+
+		return WorldPoint.fromRegion(point.getRegionId(), point.getRegionX(), point.getRegionY(), point.getZ());
 	}
 }

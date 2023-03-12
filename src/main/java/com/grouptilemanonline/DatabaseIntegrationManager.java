@@ -40,6 +40,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.inject.Inject;
+import javax.swing.*;
 
 import net.runelite.api.ChatMessageType;
 import net.runelite.api.Client;
@@ -125,6 +126,26 @@ public class DatabaseIntegrationManager {
         }
         try {
             GroupTiles remoteTiles = gson.fromJson(clipboardText, GroupTiles.class);
+            String playerName = remoteTiles.getPlayerName();
+            String groupMembersJson = configManager.getConfiguration(TilemanModePlugin.CONFIG_GROUP, "groupmembers");
+            if (!Strings.isNullOrEmpty(groupMembersJson)) {
+                Collection<GroupMember> groupMembers = gson.fromJson(groupMembersJson, new TypeToken<List<GroupMember>>() {}.getType());
+                boolean memberFound = false;
+                for (GroupMember member : groupMembers) {
+                    if (member.getPlayerName() == playerName) memberFound = true;
+                }
+
+                if (!memberFound) {
+                    groupMembers.add(new GroupMember(playerName, groupMembers.size() + 1));
+                    configManager.setConfiguration(TilemanModePlugin.CONFIG_GROUP, "groupmembers", gson.toJson(groupMembers));
+                }
+            }
+            else {
+                List<GroupMember> groupMembers = new ArrayList<GroupMember>();
+                GroupMember newMember = new GroupMember(playerName, 1);
+                groupMembers.add(newMember);
+                configManager.setConfiguration(TilemanModePlugin.CONFIG_GROUP, "groupmembers", gson.toJson(groupMembers));
+            }
             for (String region : remoteTiles.getRegionTiles().keySet() ) {
                 Collection<TilemanModeTile> localRegionTiles = Collections.emptyList();
                 String json = configManager.getConfiguration(TilemanModePlugin.CONFIG_GROUP, region);

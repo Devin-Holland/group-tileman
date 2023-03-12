@@ -144,21 +144,61 @@ public interface TilemanModeConfig extends Config {
     @Alpha
     @ConfigItem(
             keyName = "markerColor",
-            name = "Tile Color",
+            name = "Personal Tile Color",
             section = settingsSection,
-            description = "Configures the color of the tiles",
+            description = "Configures the color of the tiles you have personally unlocked",
             position = 6
     )
     default Color markerColor() {
         return Color.YELLOW;
     }
 
+    @Alpha
+    @ConfigItem(
+            keyName = "groupMarkerColor1",
+            name = "Group Member #1 Tile Color",
+            section = settingsSection,
+            description = "Configures the color of the tiles of Group Member #1 (Determined on order of joining group)",
+            position = 7
+    )
+    default Color groupMarkerColor1() { return markerColor().BLUE; }
+
+    @Alpha
+    @ConfigItem(
+            keyName = "groupMarkerColor2",
+            name = "Group Member #2 Tile Color",
+            section = settingsSection,
+            description = "Configures the color of the tiles of Group Member #2 (Determined on order of joining group)",
+            position = 8
+    )
+    default Color groupMarkerColor2() { return markerColor().CYAN; }
+
+    @Alpha
+    @ConfigItem(
+            keyName = "groupMarkerColor3",
+            name = "Group Member #3 Tile Color",
+            section = settingsSection,
+            description = "Configures the color of the tiles of Group Member #3 (Determined on order of joining group)",
+            position = 9
+    )
+    default Color groupMarkerColor3() { return markerColor().GREEN; }
+
+    @Alpha
+    @ConfigItem(
+            keyName = "groupMarkerColor4",
+            name = "Group Member #4 Tile Color",
+            section = settingsSection,
+            description = "Configures the color of the tiles of Group Member #4 (Determined on order of joining group)",
+            position = 10
+    )
+    default Color groupMarkerColor4() { return markerColor().MAGENTA; }
+
     @ConfigItem(
             keyName = "disableBanking",
             name = "Disable Banking",
             section = settingsSection,
             description = "Disables banking options on npc/bank booth/bank chest",
-            position = 7
+            position = 100
     )
     default boolean disableBanking() { return false; }
 

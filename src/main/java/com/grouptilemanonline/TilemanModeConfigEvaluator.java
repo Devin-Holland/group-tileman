@@ -29,6 +29,7 @@ package com.grouptilemanonline;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.inject.Inject;
+import java.awt.*;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -125,4 +126,16 @@ class TilemanModeConfigEvaluator implements TilemanModeConfig {
 
     @Override
     public boolean disableBanking() { return config.disableBanking(); }
+
+    @Override
+    public Color groupMarkerColor1() { return config.groupMarkerColor1(); }
+
+    @Override
+    public Color groupMarkerColor2() { return config.groupMarkerColor2(); }
+
+    @Override
+    public Color groupMarkerColor3() { return config.groupMarkerColor3(); }
+
+    @Override
+    public Color groupMarkerColor4() { return config.groupMarkerColor4(); }
 }
