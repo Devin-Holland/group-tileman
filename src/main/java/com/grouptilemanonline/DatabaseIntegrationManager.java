@@ -155,6 +155,7 @@ public class DatabaseIntegrationManager {
                 }
                 Collection<TilemanModeTile> remoteRegionTiles = remoteTiles.getRegionTiles().get(region);
                 Collection<TilemanModeTile> mergedRegionTiles = Stream.concat(localRegionTiles.stream(), remoteRegionTiles.stream())
+                        .distinct()
                         .collect(Collectors.toList());
 
                 configManager.setConfiguration(TilemanModePlugin.CONFIG_GROUP, region, gson.toJson(mergedRegionTiles));
