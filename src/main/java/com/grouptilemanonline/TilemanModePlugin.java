@@ -191,6 +191,11 @@ public class TilemanModePlugin extends Plugin {
 
     @Subscribe
     public void onConfigChanged(ConfigChanged event) {
+        final Player player = client.getLocalPlayer();
+        // This event fired before login
+        if (player == null) {
+            return;
+        }
         // Check if automark tiles is on, and if so attempt to step on current tile
         final WorldPoint playerPos = client.getLocalPlayer().getWorldLocation();
         final LocalPoint playerPosLocal = LocalPoint.fromWorld(client, playerPos);
