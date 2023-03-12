@@ -374,7 +374,7 @@ public class TilemanModePlugin extends Plugin {
         int totalTiles = 0;
         for (String region : regions) {
             Collection<TilemanModeTile> regionTiles = getTiles(removeRegionPrefix(region));
-            regionTiles.removeIf(tile -> tile.getPlayerName() != getPlayerName());
+            regionTiles.removeIf(tile -> !tile.getPlayerName().equals(getPlayerName()));
             totalTiles += regionTiles.size();
         }
 
