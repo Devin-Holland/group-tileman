@@ -38,8 +38,7 @@ import net.runelite.api.*;
 import net.runelite.api.coords.LocalPoint;
 import net.runelite.api.coords.WorldPoint;
 import net.runelite.api.events.*;
-import net.runelite.api.widgets.Widget;
-import net.runelite.api.widgets.WidgetInfo;
+import net.runelite.client.callback.ClientThread;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.events.ConfigChanged;
@@ -68,6 +67,8 @@ public class TilemanModePlugin extends Plugin {
     public static final String REGION_PREFIX = "region_";
 
     private static final Gson GSON = new Gson();
+
+    private TilemanGroupPanel panel;
 
     @Getter(AccessLevel.PACKAGE)
     private final List<TilemanModeTile> points = new ArrayList<>();
@@ -101,6 +102,9 @@ public class TilemanModePlugin extends Plugin {
 
     @Inject
     private DatabaseIntegrationManager databaseIntegrationManager;
+
+    @Inject
+    private ClientThread clientThread;
 
 
     @Provides
@@ -230,7 +234,8 @@ public class TilemanModePlugin extends Plugin {
         loadPoints();
         updateTileCounter();
         log.debug("startup");
-        TilemanImportPanel panel = new TilemanImportPanel(this);
+        panel = injector.getInstance(TilemanGroupPanel.class);
+
         NavigationButton navButton = NavigationButton.builder()
                 .tooltip("Tileman Import")
                 .icon(ImageUtil.getResourceStreamFromClass(getClass(), "/icon.png"))
