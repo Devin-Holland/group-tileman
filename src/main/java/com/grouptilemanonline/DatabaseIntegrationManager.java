@@ -85,6 +85,15 @@ public class DatabaseIntegrationManager {
     }
 
     private void exportTilesFromPlayer(MenuEntry menuEntry) {
+        final String exportDump = gson.toJson(getPlayerTiles());
+
+        Toolkit.getDefaultToolkit()
+                .getSystemClipboard()
+                .setContents(new StringSelection(exportDump), null);
+    }
+
+    public GroupTiles getPlayerTiles()
+    {
         List<String> keys = configManager.getConfigurationKeys(TilemanModePlugin.CONFIG_GROUP);
 
         TreeMap<String, List<TilemanModeTile>> tilesToExport = new TreeMap<>();
@@ -96,16 +105,12 @@ public class DatabaseIntegrationManager {
                 }.getType());
                 regionTiles.removeIf(tile -> !tile.getPlayerName().equals(plugin.getPlayerName()));
                 if(regionTiles.size() > 0 ) {
-                  tilesToExport.put(key, regionTiles);
+                    tilesToExport.put(key, regionTiles);
                 }
             }
         }
 
-        final String exportDump = gson.toJson(new GroupTiles(plugin.getPlayerName(), tilesToExport));
-
-        Toolkit.getDefaultToolkit()
-                .getSystemClipboard()
-                .setContents(new StringSelection(exportDump), null);
+        return new GroupTiles(plugin.getPlayerName(), tilesToExport);
     }
 
     private void importTilesFromPlayer(MenuEntry menuEntry) {
