@@ -247,7 +247,7 @@ public class TilemanModePlugin extends Plugin {
         panel = injector.getInstance(TilemanGroupPanel.class);
 
         NavigationButton navButton = NavigationButton.builder()
-                .tooltip("Tileman Import")
+                .tooltip("Tileman Group Console")
                 .icon(ImageUtil.getResourceStreamFromClass(getClass(), "/icon.png"))
                 .priority(70)
                 .panel(panel)
@@ -777,6 +777,7 @@ public class TilemanModePlugin extends Plugin {
                     }
                 }
 
+                response.body().close();
                 loadPoints();
             }
         });
