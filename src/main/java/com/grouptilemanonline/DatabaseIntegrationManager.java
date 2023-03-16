@@ -172,6 +172,49 @@ public class DatabaseIntegrationManager {
         }
     }
 
+    public void importTiles(GroupTiles remoteTiles) {
+        try {
+            String playerName = remoteTiles.getPlayerName();
+            String groupMembersJson = configManager.getConfiguration(TilemanModePlugin.CONFIG_GROUP, "groupmembers");
+            if (!Strings.isNullOrEmpty(groupMembersJson)) {
+                Collection<GroupMember> groupMembers = gson.fromJson(groupMembersJson, new TypeToken<List<GroupMember>>() {}.getType());
+                boolean memberFound = false;
+                for (GroupMember member : groupMembers) {
+                    if (member.getPlayerName() == playerName) memberFound = true;
+                }
+
+                if (!memberFound) {
+                    groupMembers.add(new GroupMember(playerName, groupMembers.size() + 1));
+                    configManager.setConfiguration(TilemanModePlugin.CONFIG_GROUP, "groupmembers", gson.toJson(groupMembers));
+                }
+            }
+            else {
+                List<GroupMember> groupMembers = new ArrayList<GroupMember>();
+                GroupMember newMember = new GroupMember(playerName, 1);
+                groupMembers.add(newMember);
+                configManager.setConfiguration(TilemanModePlugin.CONFIG_GROUP, "groupmembers", gson.toJson(groupMembers));
+            }
+            for (String region : remoteTiles.getRegionTiles().keySet() ) {
+                Collection<TilemanModeTile> localRegionTiles = Collections.emptyList();
+                String json = configManager.getConfiguration(TilemanModePlugin.CONFIG_GROUP, region);
+                if (!Strings.isNullOrEmpty(json)) {
+                    localRegionTiles = gson.fromJson(json, new TypeToken<List<TilemanModeTile>>() {
+                    }.getType());
+                }
+                Collection<TilemanModeTile> remoteRegionTiles = remoteTiles.getRegionTiles().get(region);
+                Collection<TilemanModeTile> mergedRegionTiles = Stream.concat(localRegionTiles.stream(), remoteRegionTiles.stream())
+                        .distinct()
+                        .collect(Collectors.toList());
+
+                configManager.setConfiguration(TilemanModePlugin.CONFIG_GROUP, region, gson.toJson(mergedRegionTiles));
+            }
+
+            plugin.loadPoints();
+        } catch (JsonSyntaxException e) {
+            sendChatMessage("Failed to add tiles");
+        }
+    }
+
     private void sendChatMessage(final String message) {
         chatMessageManager.queue(QueuedMessage.builder()
                 .type(ChatMessageType.CONSOLE)

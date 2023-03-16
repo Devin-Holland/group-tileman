@@ -44,12 +44,16 @@ import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.events.ConfigChanged;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
+import net.runelite.client.task.Schedule;
 import net.runelite.client.ui.ClientToolbar;
 import net.runelite.client.ui.NavigationButton;
 import net.runelite.client.ui.overlay.OverlayManager;
 import net.runelite.client.util.ImageUtil;
+import okhttp3.*;
 
 import javax.inject.Inject;
+import java.io.IOException;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -65,8 +69,14 @@ public class TilemanModePlugin extends Plugin {
     private static final String UNMARK = "Clear Tileman tile";
     private static final String WALK_HERE = "Walk here";
     public static final String REGION_PREFIX = "region_";
+    public static final String DATABASE_URL = "https://functions-node-1-grouptile.harperdbcloud.com/tileman";
 
-    private static final Gson GSON = new Gson();
+    private static final MediaType JSON
+            = MediaType.parse("application/json; charset=utf-8");
+
+    private static final Gson gson = new Gson();
+
+    private static final OkHttpClient httpClient = new OkHttpClient();
 
     private TilemanGroupPanel panel;
 
@@ -432,7 +442,7 @@ public class TilemanModePlugin extends Plugin {
             return Collections.emptyList();
         }
 
-        return GSON.fromJson(json, new TypeToken<List<TilemanModeTile>>() {
+        return gson.fromJson(json, new TypeToken<List<TilemanModeTile>>() {
         }.getType());
     }
 
@@ -460,26 +470,11 @@ public class TilemanModePlugin extends Plugin {
             return;
         }
 
-        String json = GSON.toJson(points);
+        String json = gson.toJson(points);
         configManager.setConfiguration(CONFIG_GROUP, REGION_PREFIX + regionId, json);
-    }
 
-    /*
-    private Collection<WorldPoint> translateToWorldPoint(Collection<TilemanModeTile> points) {
-        if (points.isEmpty()) {
-            return Collections.emptyList();
-        }
-
-        return points.stream()
-                .map(point -> WorldPoint.fromRegion(point.getRegionId(), point.getRegionX(), point.getRegionY(), point.getZ()))
-                .flatMap(worldPoint ->
-                {
-                    final Collection<WorldPoint> localWorldPoints = WorldPoint.toLocalInstance(client, worldPoint);
-                    return localWorldPoints.stream();
-                })
-                .collect(Collectors.toList());
+        addPlayerTilesToDBAsync();
     }
-    */
 
     int getTotalTiles() {
         return totalTilesUsed;
@@ -698,6 +693,93 @@ public class TilemanModePlugin extends Plugin {
 
     public String getPlayerName() {
         return client.getLocalPlayer() != null && client.getLocalPlayer().getName() != null ? client.getLocalPlayer().getName() : "";
+    }
+
+    public String getGroupJoinCode() {
+        return configManager.getConfiguration(TilemanModePlugin.CONFIG_GROUP, "groupJoinCode");
+    }
+
+    public boolean addPlayerTilesToDB() throws IOException {
+        AddTilesObject bodyContents = new AddTilesObject(this.getPlayerName(), this.getGroupJoinCode(), databaseIntegrationManager.getPlayerTiles());
+
+        RequestBody body = RequestBody.create(JSON, gson.toJson(bodyContents));
+
+        Request request = new Request.Builder()
+                .url(DATABASE_URL + "/AddTiles")
+                .post(body)
+                .build();
+
+        Call call = httpClient.newCall(request);
+        Response response = call.execute();
+
+        if (response.code() != 200) {
+            log.error("Unable to add Tiles");
+            return false;
+        }
+
+        return true;
+    }
+
+    public void addPlayerTilesToDBAsync() {
+        AddTilesObject bodyContents = new AddTilesObject(this.getPlayerName(), this.getGroupJoinCode(), databaseIntegrationManager.getPlayerTiles());
+
+        RequestBody body = RequestBody.create(JSON, gson.toJson(bodyContents));
+
+        Request request = new Request.Builder()
+                .url(DATABASE_URL + "/AddTiles")
+                .post(body)
+                .build();
+
+        httpClient.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                log.error("Unable to add tiles");
+            }
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                if (!response.isSuccessful()) {
+                    log.error("Unable to add Tiles");
+                }
+            }
+        });
+    }
+
+    @Schedule(period = 5, unit = ChronoUnit.SECONDS)
+    public void getTilesFromDB() {
+        String playerName = getPlayerName();
+        String groupJoinCode = getGroupJoinCode();
+        if (Strings.isNullOrEmpty(playerName) || Strings.isNullOrEmpty(groupJoinCode)) {
+            return;
+        }
+
+        Request request = new Request.Builder()
+                .url(DATABASE_URL + "/GetGroupTiles/" + groupJoinCode)
+                .build();
+
+        httpClient.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                log.error("Unable to get tiles");
+            }
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                if (!response.isSuccessful()) {
+                    log.error("Unable to Get Tiles");
+                    return;
+                }
+
+                List<GetTilesObject> getTilesObjectList = gson.fromJson(response.body().string(), new TypeToken<List<GetTilesObject>>() {}.getType());
+                for (GetTilesObject getTilesObject : getTilesObjectList) {
+                    if(!getTilesObject.getUsername().equals(getPlayerName())) {
+                        databaseIntegrationManager.importTiles(getTilesObject.getTiles());
+                    }
+                }
+
+                loadPoints();
+            }
+        });
     }
 
     int getXpUntilNextTile() {

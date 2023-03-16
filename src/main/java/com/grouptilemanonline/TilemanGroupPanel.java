@@ -62,9 +62,7 @@ public class TilemanGroupPanel extends PluginPanel {
     private static final String BTN_COPY_CODE_TEXT = "Copy Join Code";
     private static final String BTN_LEAVE_GROUP_TEXT = "Leave Group";
 
-    private static final String DATABASE_URL = "https://functions-node-1-grouptile.harperdbcloud.com/tileman";
-
-    public static final MediaType JSON
+    private static final MediaType JSON
             = MediaType.parse("application/json; charset=utf-8");
 
     private final JButton startButton = new JButton();
@@ -155,12 +153,12 @@ public class TilemanGroupPanel extends PluginPanel {
 
                 if (result == JOptionPane.YES_OPTION)
                 {
-                    LeaveGroupObject bodyContents = new LeaveGroupObject(plugin.getPlayerName(), getGroupJoinCode());
+                    LeaveGroupObject bodyContents = new LeaveGroupObject(plugin.getPlayerName(), plugin.getGroupJoinCode());
 
                     RequestBody body = RequestBody.create(JSON, gson.toJson(bodyContents));
 
                     Request request = new Request.Builder()
-                            .url(DATABASE_URL + "/LeaveGroup")
+                            .url(TilemanModePlugin.DATABASE_URL + "/LeaveGroup")
                             .post(body)
                             .build();
 
@@ -187,11 +185,7 @@ public class TilemanGroupPanel extends PluginPanel {
             {
                 // Create party
                 clientThread.invokeLater(() -> {
-                    try {
                         this.generatePassphrase();
-                    } catch (IOException ex) {
-                        throw new RuntimeException(ex);
-                    }
                 });
             }
         });
@@ -237,26 +231,18 @@ public class TilemanGroupPanel extends PluginPanel {
 
                 RequestBody body = RequestBody.create(JSON, gson.toJson(bodyContents));
 
-                Request request = new Request.Builder()
-                        .url(DATABASE_URL + "/AddTiles")
-                        .post(body)
-                        .build();
-
-                Call call = httpClient.newCall(request);
-                Response response = null;
+                boolean tilesAdded = false;
                 try {
-                    response = call.execute();
+                    tilesAdded = plugin.addPlayerTilesToDB();
                 } catch (IOException ex) {
-                    log.error("Unable to join group");
-                    configManager.setConfiguration(TilemanModePlugin.CONFIG_GROUP, "groupJoinCode", "");
-                    updateGroup();
-                    return;
+                    // Do nothing, handled by conditional after
                 }
 
-                if (response.code() != 200) {
+                if (!tilesAdded) {
                     log.error("Unable to join group");
                     configManager.setConfiguration(TilemanModePlugin.CONFIG_GROUP, "groupJoinCode", "");
                 }
+
                 updateGroup();
             }
         });
@@ -266,7 +252,7 @@ public class TilemanGroupPanel extends PluginPanel {
             if (isInGroup())
             {
                 Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
-                clipboard.setContents(new StringSelection(this.getGroupJoinCode()), null);
+                clipboard.setContents(new StringSelection(plugin.getGroupJoinCode()), null);
             }
         });
 
@@ -288,7 +274,7 @@ public class TilemanGroupPanel extends PluginPanel {
         }
         else {
             String groupPanelText = "You can now invite group members.<br/>" +
-                    "Your group join code is: " + getGroupJoinCode() + "<br/><br/>" +
+                    "Your group join code is: " + plugin.getGroupJoinCode() + "<br/><br/>" +
                     "Your other group members (refresh by disabling & re-enabling plugin):<br/><br/>";
 
             String groupMembersJson = configManager.getConfiguration(TilemanModePlugin.CONFIG_GROUP, "groupmembers");
@@ -306,7 +292,7 @@ public class TilemanGroupPanel extends PluginPanel {
         }
     }
 
-    private void generatePassphrase() throws IOException {
+    private void generatePassphrase() {
         assert client.isClientThread();
 
         Random r = new Random();
@@ -359,26 +345,19 @@ public class TilemanGroupPanel extends PluginPanel {
 
         AddTilesObject bodyContents = new AddTilesObject(plugin.getPlayerName(), partyPassphrase, databaseIntegrationManager.getPlayerTiles());
 
-        RequestBody body = RequestBody.create(JSON, gson.toJson(bodyContents));
+        boolean tilesAdded = false;
+        try {
+            tilesAdded = plugin.addPlayerTilesToDB();
+        } catch (IOException e) {
+            // Do nothing, handled by conditional later
+        }
 
-        Request request = new Request.Builder()
-                .url(DATABASE_URL + "/AddTiles")
-                .post(body)
-                .build();
-
-        Call call = httpClient.newCall(request);
-        Response response = call.execute();
-
-        if (response.code() != 200) {
+        if (!tilesAdded) {
             log.error("Unable to create group");
             configManager.setConfiguration(TilemanModePlugin.CONFIG_GROUP, "groupJoinCode", "");
         }
 
         updateGroup();
-    }
-
-    private String getGroupJoinCode() {
-        return configManager.getConfiguration(TilemanModePlugin.CONFIG_GROUP, "groupJoinCode");
     }
 
     private boolean isInGroup() {
